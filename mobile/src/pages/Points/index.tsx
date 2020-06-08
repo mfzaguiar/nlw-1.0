@@ -18,6 +18,7 @@ interface Point {
   id: number;
   name: string;
   image: string;
+  image_url: string;
   latitude: number;
   longitude: number;
 }
@@ -132,7 +133,7 @@ const Points = () => {
                   <S.MapMarkerContainer>
                     <S.MapMarkerImage
                       source={{
-                        uri: point.image,
+                        uri: point.image_url,
                       }}
                       resizeMode="cover"
                     />

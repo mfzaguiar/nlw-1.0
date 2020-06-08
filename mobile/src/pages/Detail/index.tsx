@@ -16,6 +16,7 @@ interface Data {
   point: {
     id: number;
     image: string;
+    image_url: string;
     name: string;
     email: string;
     whatsapp: string;
@@ -70,7 +71,7 @@ const Detail = () => {
 
         <S.PointImage
           source={{
-            uri: data.point.image,
+            uri: data.point.image_url,
           }}
         />
         <S.PointName>{data.point.name}</S.PointName>
