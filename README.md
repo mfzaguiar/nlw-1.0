@@ -28,7 +28,7 @@
 
 ## 💻 Projeto
 
-**Ecoleta** projeto desenvolvido na semana **nlw**, tem como objetivo o cadastro de pontos de coleta de resíduos.
+**Ecoleta** projeto desenvolvido na semana **nlw** promovida pela **Rocketseat**, tem como objetivo a conexão de pessoas e empresas que coletam resíduos especificos.
 
 ## :rocket: Tecnologias
 
