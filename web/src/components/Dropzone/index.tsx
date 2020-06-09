@@ -6,9 +6,13 @@ import './styles.css';
 
 interface Props {
   onFileUploaded: (file: File) => void;
+  setValue: Function;
 }
+// interface Props {
+//   onFileUploaded: (file: File) => void;
+// }
 
-const Dropzone: React.FC<Props> = ({ onFileUploaded }) => {
+const Dropzone: React.FC<Props> = ({ onFileUploaded, setValue }) => {
   const [preview, SetPreview] = useState('');
 
   const onDrop = useCallback(
@@ -19,8 +23,9 @@ const Dropzone: React.FC<Props> = ({ onFileUploaded }) => {
 
       SetPreview(fileUrl);
       onFileUploaded(file);
+      setValue('file', file);
     },
-    [onFileUploaded]
+    [onFileUploaded, setValue]
   );
   const { getRootProps, getInputProps } = useDropzone({
     onDrop,
@@ -34,10 +39,10 @@ const Dropzone: React.FC<Props> = ({ onFileUploaded }) => {
       {preview ? (
         <img src={preview} alt="preview" />
       ) : (
-        <p>
+        <span>
           <FiUpload />
           Selecione a imagem do estabelecimento
-        </p>
+        </span>
       )}
     </div>
   );

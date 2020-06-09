@@ -8,6 +8,8 @@
   align-items: center;
   margin-top: 48px;
   outline: 0;
+
+  cursor: pointer;
 }
 
 .dropzone img {
@@ -16,7 +18,7 @@
   object-fit: cover;
 }
 
-.dropzone p {
+.dropzone span {
   width: calc(100% - 60px);
   height: calc(100% - 60px);
   border-radius: 10px;

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
+import React, { useState, useEffect, ChangeEvent } from 'react';
+import { useForm, Controller } from 'react-hook-form';
 import { Link, useHistory } from 'react-router-dom';
 import { FiArrowLeft } from 'react-icons/fi';
 import { Map, TileLayer, Marker } from 'react-leaflet';
@@ -10,6 +11,7 @@ import logo from '../../assets/logo.svg';
 import * as S from './styles';
 
 import api from '../../services/api';
+import pointSchema from '../../helpers/schema/point';
 
 interface Item {
   id: number;
@@ -25,6 +27,17 @@ interface IBGECityResponse {
   nome: string;
 }
 
+interface Point {
+  name: string;
+  email: string;
+  whatsapp: string;
+  city: string;
+  uf: string;
+  coords: [number, number];
+  items: number[];
+  file: File;
+}
+
 const CreatePoint = () => {
   const [items, setItems] = useState<Item[]>([]);
   const [ufs, setUfs] = useState<string[]>([]);
@@ -35,15 +48,8 @@ const CreatePoint = () => {
     0,
   ]);
 
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    whatsapp: '',
-  });
-
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
   const [selectedUF, setSelectedUF] = useState('0');
-  const [selectedCity, setSelectedCity] = useState('0');
   const [selectedPosition, setSelectedPosition] = useState<[number, number]>([
     0,
     0,
@@ -103,60 +109,81 @@ const CreatePoint = () => {
     setSelectedUF(uf);
   }
 
-  function handleSelectedCity(event: ChangeEvent<HTMLSelectElement>) {
-    const city = event.target.value;
-    setSelectedCity(city);
-  }
-
   function handleMapClick(event: LeafletMouseEvent) {
     setSelectedPosition([event.latlng.lat, event.latlng.lng]);
   }
 
-  function handleInputChange(event: ChangeEvent<HTMLInputElement>) {
-    const { name, value } = event.target;
-
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  }
-
-  function handleSelectedItem(id: number) {
+  function handleSelectedItem(id: number, setValue: Function) {
     const alreadySelected = selectedItems.findIndex((item) => item === id);
 
     if (alreadySelected >= 0) {
       const filteredItems = selectedItems.filter((item) => item !== id);
       setSelectedItems(filteredItems);
+      setValue('items', filteredItems);
     } else {
       setSelectedItems([...selectedItems, id]);
+      setValue('items', [...selectedItems, id]);
     }
   }
 
-  async function handleSubmit(event: FormEvent) {
-    event.preventDefault();
+  // async function handleSubmit(event: FormEvent) {
+  //   event.preventDefault();
 
-    const { name, email, whatsapp } = formData;
-    const uf = selectedUF;
-    const city = selectedCity;
-    const [latitude, longitude] = selectedPosition;
-    const items = selectedItems;
+  //   const { name, email, whatsapp } = formData;
+  //   const uf = selectedUF;
+  //   const city = selectedCity;
+  //   const [latitude, longitude] = selectedPosition;
+  //   const items = selectedItems;
 
-    const data = new FormData();
+  //   const data = new FormData();
 
-    data.append('name', name);
-    data.append('email', email);
-    data.append('whatsapp', whatsapp);
-    data.append('uf', uf);
-    data.append('city', city);
-    data.append('latitude', String(latitude));
-    data.append('longitude', String(longitude));
-    data.append('items', items.join(','));
-    selectedFile && data.append('image', selectedFile);
+  //   data.append('name', name);
+  //   data.append('email', email);
+  //   data.append('whatsapp', whatsapp);
+  //   data.append('uf', uf);
+  //   data.append('city', city);
+  //   data.append('latitude', String(latitude));
+  //   data.append('longitude', String(longitude));
+  //   data.append('items', items.join(','));
+  //   selectedFile && data.append('image', selectedFile);
 
-    await api.post('points', data);
+  //   await api.post('points', data);
+
+  //   history.push('/');
+  // }
+
+  const onSubmit = async (data: Point) => {
+    const { name, email, whatsapp, uf, city, file, coords, items } = data;
+    const dataPoint = new FormData();
+
+    dataPoint.append('name', name);
+    dataPoint.append('email', email);
+    dataPoint.append('whatsapp', whatsapp);
+    dataPoint.append('uf', uf);
+    dataPoint.append('city', city);
+    dataPoint.append('latitude', String(coords[0]));
+    dataPoint.append('longitude', String(coords[1]));
+    dataPoint.append('items', items.join(','));
+    selectedFile && dataPoint.append('image', file);
+
+    await api.post('points', dataPoint);
 
     history.push('/');
-  }
+  };
+
+  const { register, handleSubmit, setValue, errors, control } = useForm<Point>({
+    defaultValues: {
+      name: '',
+      email: '',
+      whatsapp: '',
+      uf: '0',
+      city: '0',
+      coords: [0, 0],
+      items: [],
+      file: undefined,
+    },
+    validationSchema: pointSchema,
+  });
 
   return (
     <S.Container>
@@ -170,13 +197,18 @@ const CreatePoint = () => {
         </Link>
       </header>
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit(onSubmit)}>
         <h1>
           Cadastro do <br />
           ponto de coleta
         </h1>
 
-        <Dropzone onFileUploaded={setSelectedFile} />
+        <Controller
+          name="file"
+          as={<Dropzone onFileUploaded={setSelectedFile} setValue={setValue} />}
+          control={control}
+        />
+        {errors.file && <p>Selecione uma imagem</p>}
 
         <fieldset>
           <legend>
@@ -185,32 +217,20 @@ const CreatePoint = () => {
 
           <div className="field">
             <label htmlFor="name">Nome da entidade</label>
-            <input
-              type="text"
-              name="name"
-              id="name"
-              onChange={handleInputChange}
-            />
+            <input id="name" name="name" type="text" ref={register} />
+            {errors.name && <p>{errors.name.message}</p>}
           </div>
 
           <div className="field-group">
             <div className="field">
               <label htmlFor="email">Email</label>
-              <input
-                type="email"
-                name="email"
-                id="email"
-                onChange={handleInputChange}
-              />
+              <input type="email" name="email" id="email" ref={register} />
+              {errors.email && <p>{errors.email.message}</p>}
             </div>
             <div className="field">
               <label htmlFor="whatsapp">Whatsapp</label>
-              <input
-                type="text"
-                name="whatsapp"
-                id="whatsapp"
-                onChange={handleInputChange}
-              />
+              <input type="text" name="whatsapp" id="whatsapp" ref={register} />
+              {errors.whatsapp && <p>{errors.whatsapp.message}</p>}
             </div>
           </div>
         </fieldset>
@@ -221,14 +241,26 @@ const CreatePoint = () => {
             <span>Selecione o endereço no mapa</span>
           </legend>
 
-          <Map center={initialPosition} zoom={15} onClick={handleMapClick}>
-            <TileLayer
-              attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-
-            {selectedPosition && <Marker position={selectedPosition} />}
-          </Map>
+          <div className="map">
+            <Controller
+              name="coords"
+              as={Map}
+              control={control}
+              center={initialPosition}
+              zoom={15}
+              onclick={(event: LeafletMouseEvent) => {
+                setValue('coords', [event.latlng.lat, event.latlng.lng]);
+                handleMapClick(event);
+              }}
+            >
+              <TileLayer
+                attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              {selectedPosition && <Marker position={selectedPosition} />}
+            </Controller>
+            {errors.coords && <p>{errors.coords[0].message}</p>}
+          </div>
 
           <div className="field-group">
             <div className="field">
@@ -236,8 +268,11 @@ const CreatePoint = () => {
               <select
                 name="uf"
                 id="uf"
-                value={selectedUF}
-                onChange={handleSelectedUF}
+                onChange={(e) => {
+                  setValue('uf', e.target.value);
+                  handleSelectedUF(e);
+                }}
+                ref={register}
               >
                 <option value="0">Selecione uma UF</option>
                 {ufs.map((uf) => (
@@ -246,6 +281,7 @@ const CreatePoint = () => {
                   </option>
                 ))}
               </select>
+              {errors.uf && <p>{errors.uf.message}</p>}
             </div>
 
             <div className="field">
@@ -253,8 +289,8 @@ const CreatePoint = () => {
               <select
                 name="city"
                 id="city"
-                value={selectedCity}
-                onChange={handleSelectedCity}
+                onChange={(e) => setValue('city', e.target.value)}
+                ref={register}
               >
                 <option value="0">Selecione uma cidade</option>
                 {cities.map((city) => (
@@ -263,6 +299,7 @@ const CreatePoint = () => {
                   </option>
                 ))}
               </select>
+              {errors.city && <p>{errors.city.message}</p>}
             </div>
           </div>
         </fieldset>
@@ -275,16 +312,24 @@ const CreatePoint = () => {
 
           <ul className="items-grid">
             {items.map((item) => (
-              <li
-                className={selectedItems.includes(item.id) ? 'selected' : ''}
+              <Controller
                 key={item.id}
-                onClick={() => handleSelectedItem(item.id)}
-              >
-                <img src={item.image_url} alt={item.title} />
-                <span>{item.title}</span>
-              </li>
+                name="items"
+                as={
+                  <li>
+                    <img src={item.image_url} alt={item.title} />
+                    <span>{item.title}</span>
+                  </li>
+                }
+                control={control}
+                onClick={() => {
+                  handleSelectedItem(item.id, setValue);
+                }}
+                className={selectedItems.includes(item.id) ? 'selected' : ''}
+              />
             ))}
           </ul>
+          {errors.items && <p>Selecione um item</p>}
         </fieldset>
 
         <button type="submit">Cadastrar ponto de coleta</button>

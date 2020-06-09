@@ -46,6 +46,13 @@ export const Container = styled.div`
       border: 0;
     }
 
+    p {
+      color: red;
+      font-size: 12px;
+      margin-top: 5px;
+      text-transform: lowercase;
+    }
+
     legend {
       width: 100%;
       display: flex;
@@ -110,6 +117,10 @@ export const Container = styled.div`
       }
     }
 
+    .map {
+      margin-bottom: 24px;
+    }
+
     .field + .field {
       margin-left: 24px;
     }
@@ -161,7 +172,6 @@ export const Container = styled.div`
       width: 100%;
       height: 350px;
       border-radius: 8px;
-      margin-bottom: 24px;
     }
 
     button {
