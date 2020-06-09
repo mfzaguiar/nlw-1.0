@@ -126,32 +126,6 @@ const CreatePoint = () => {
     }
   }
 
-  // async function handleSubmit(event: FormEvent) {
-  //   event.preventDefault();
-
-  //   const { name, email, whatsapp } = formData;
-  //   const uf = selectedUF;
-  //   const city = selectedCity;
-  //   const [latitude, longitude] = selectedPosition;
-  //   const items = selectedItems;
-
-  //   const data = new FormData();
-
-  //   data.append('name', name);
-  //   data.append('email', email);
-  //   data.append('whatsapp', whatsapp);
-  //   data.append('uf', uf);
-  //   data.append('city', city);
-  //   data.append('latitude', String(latitude));
-  //   data.append('longitude', String(longitude));
-  //   data.append('items', items.join(','));
-  //   selectedFile && data.append('image', selectedFile);
-
-  //   await api.post('points', data);
-
-  //   history.push('/');
-  // }
-
   const onSubmit = async (data: Point) => {
     const { name, email, whatsapp, uf, city, file, coords, items } = data;
     const dataPoint = new FormData();
